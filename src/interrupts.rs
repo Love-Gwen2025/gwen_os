@@ -9,22 +9,41 @@
 //! - 软件中断：程序主动触发，如系统调用
 
 use crate::serial;
-use x86_64::structures::idt::{self, InterruptDescriptorTable, InterruptStackFrame};
+use lazy_static::lazy_static;
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 // =============================================================================
 // IDT 静态实例
 // =============================================================================
 
-/// 使用 lazy_static 创建静态 IDT
-///
-/// 为什么用 lazy_static？
-/// - IDT 需要在程序启动后初始化（不是编译时）
-/// - 但又需要是 'static 生命周期（永久存在）
-/// - 我们使用简单的 Option 来实现延迟初始化
+// 使用 lazy_static 宏创建静态 IDT
+//
+// 为什么用 lazy_static？
+// - IDT 需要在程序启动后初始化（不是编译时）
+// - 但又需要是 'static 生命周期（永久存在）
+// - lazy_static 提供了安全的延迟初始化机制
+//
+// 相比 static mut 的优势：
+// - 线程安全（虽然我们是单核，但这是好习惯）
+// - 不需要 unsafe 块来访问
+// - 初始化只会发生一次
+lazy_static! {
+    /// 全局 IDT 实例
+    /// 在第一次访问时初始化，之后永久存在
+    /// 这里的ref是宏语法
+    static ref IDT: InterruptDescriptorTable = {
+        // 创建新的 IDT
+        let mut idt = InterruptDescriptorTable::new();
 
-/// IDT 实例，使用 Mutex 保护
-/// 在单核情况下其实不需要锁，但这是好习惯
-static mut IDT: Option<InterruptDescriptorTable> = None;
+        // 注册断点异常处理器（中断号 3）
+        idt.breakpoint.set_handler_fn(breakpoint_handler);
+
+        // 注册双重故障处理器（中断号 8）
+        idt.double_fault.set_handler_fn(double_fault_handler);
+
+        idt
+    };
+}
 
 // =============================================================================
 // 异常处理函数
@@ -84,36 +103,15 @@ extern "x86-interrupt" fn double_fault_handler(
 
 /// 初始化中断描述符表（IDT）
 ///
-/// 这个函数：
-/// 1. 创建一个新的 IDT
-/// 2. 注册异常处理函数
-/// 3. 加载 IDT 到 CPU
+/// 这个函数加载预先配置好的 IDT 到 CPU
+/// IDT 的配置在 lazy_static 块中完成
 pub fn init() {
     serial::write_line("[DEBUG] Initializing IDT...");
 
-    // 创建新的 IDT
-    let mut idt = InterruptDescriptorTable::new();
-
-    // 注册断点异常处理器（中断号 3）
-    idt.breakpoint.set_handler_fn(breakpoint_handler);
-
-    // 注册双重故障处理器（中断号 8）
-    idt.double_fault.set_handler_fn(double_fault_handler);
-
-    // 将 IDT 存储到静态变量中
-    // 这是必须的，因为 CPU 需要 IDT 永久存在
-    unsafe {
-        IDT = Some(idt);
-
-        // 加载 IDT 到 CPU
-        // lidt 指令告诉 CPU IDT 的位置
-        match IDT {
-            Some(ref idt) => {
-                idt.load();
-            }
-            None => {}
-        }
-    }
+    // 加载 IDT 到 CPU
+    // lidt 指令告诉 CPU IDT 的位置
+    // 由于使用 lazy_static，这里第一次访问 IDT 会触发初始化
+    IDT.load();
 
     serial::write_line("[DEBUG] IDT initialized successfully!");
 }

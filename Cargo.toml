@@ -18,7 +18,8 @@ bootloader = "0.9"
 
 # 用于 VGA 文本模式输出的辅助库（可选）
 volatile = "0.2"
-spin = "0.5"     # 自旋锁，用于无 OS 环境下的同步
+spin = "0.5"                                                  # 自旋锁，用于无 OS 环境下的同步
+lazy_static = { version = "1.4", features = ["spin_no_std"] } # 延迟静态初始化
 
 # x86_64 架构支持：提供 IDT、GDT、分页等结构
 x86_64 = "0.14"
