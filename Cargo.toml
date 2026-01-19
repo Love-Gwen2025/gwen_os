@@ -20,6 +20,9 @@ bootloader = "0.9"
 volatile = "0.2"
 spin = "0.5"     # 自旋锁，用于无 OS 环境下的同步
 
+# x86_64 架构支持：提供 IDT、GDT、分页等结构
+x86_64 = "0.14"
+
 # bootimage QEMU 运行配置
 [package.metadata.bootimage]
 # 将串口输出重定向到终端（stdio）

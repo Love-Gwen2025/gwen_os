@@ -4,9 +4,11 @@
 
 #![no_std] // 不链接 Rust 标准库（std），因为标准库依赖操作系统功能
 #![no_main] // 禁用常规的 main 入口点，自定义入口
+#![feature(abi_x86_interrupt)] // 启用 x86 中断调用约定（实验性特性）
 
-// 引入串口模块
-mod serial;
+// 引入模块
+mod interrupts;
+mod serial; // 串口输出 // 中断处理
 
 use core::panic::PanicInfo;
 
@@ -70,6 +72,14 @@ pub extern "C" fn _start() -> ! {
     serial::init();
     serial::write_line("[DEBUG] Serial port initialized!");
     serial::write_line("[DEBUG] GwenOS kernel starting...");
+
+    // =========================================
+    // 1.5 初始化中断处理（IDT）
+    // =========================================
+    interrupts::init();
+
+    // 测试断点异常
+    interrupts::test_breakpoint();
 
     // =========================================
     // 2. 清空屏幕
