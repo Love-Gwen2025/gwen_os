@@ -1,0 +1,6 @@
+# Rust 工具链配置文件
+# 指定此项目使用 nightly 工具链
+
+[toolchain]
+channel = "nightly"
+components = ["rust-src", "llvm-tools-preview"]
