@@ -6,10 +6,10 @@ authors = ["Gwen"]
 
 # 内核编译配置
 [profile.dev]
-panic = "abort"  # 开发模式：禁用栈展开，直接 abort
+panic = "abort" # 开发模式：禁用栈展开，直接 abort
 
 [profile.release]
-panic = "abort"  # 发布模式：同样禁用栈展开
+panic = "abort" # 发布模式：同样禁用栈展开
 
 # 依赖项
 [dependencies]
@@ -18,4 +18,9 @@ bootloader = "0.9"
 
 # 用于 VGA 文本模式输出的辅助库（可选）
 volatile = "0.2"
-spin = "0.5"  # 自旋锁，用于无 OS 环境下的同步
+spin = "0.5"     # 自旋锁，用于无 OS 环境下的同步
+
+# bootimage QEMU 运行配置
+[package.metadata.bootimage]
+# 将串口输出重定向到终端（stdio）
+run-args = ["-serial", "stdio"]

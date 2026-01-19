@@ -2,11 +2,11 @@
 # 设置默认编译目标和运行器
 
 [unstable]
-build-std = ["core", "compiler_builtins"]  # 从源码编译核心库
-build-std-features = ["compiler-builtins-mem"]  # 包含内存操作函数
+build-std = ["core", "compiler_builtins"]      # 从源码编译核心库
+build-std-features = ["compiler-builtins-mem"] # 包含内存操作函数
 
 [build]
-target = "x86_64-gwen_os.json"  # 使用自定义目标
+target = "x86_64-gwen_os.json" # 使用自定义目标
 
 [target.'cfg(target_os = "none")']
 # 使用 bootimage 作为运行器
